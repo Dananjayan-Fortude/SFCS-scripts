@@ -187,13 +187,21 @@ export class DatabaseService implements OnModuleInit {
         [displayId],
       );
 
-      if (!picklistHeaderResults[0]) {
+      if (
+        Array.isArray(picklistHeaderResults[0]) &&
+        picklistHeaderResults[0].length > 1
+      ) {
         return Promise.reject({ error: 'No data found' });
       }
-
-      const picklistHeaderId = picklistHeaderResults.map(
-        (item) => item[0].picklist_header_id,
-      );
+      let picklistHeaderId: any;
+      try {
+        picklistHeaderId = picklistHeaderResults.map(
+          (item) => item[0].picklist_header_id,
+        );
+      } catch (error) {
+        console.log('No data found');
+        return Promise.reject({ error: 'No data found' });
+      }
 
       const errorPayloadQuery = ` select *
       from wms.warehouse_request_picklist_allocation_status
@@ -206,13 +214,13 @@ export class DatabaseService implements OnModuleInit {
         [picklistHeaderId[0]],
       );
 
-      if (
-        Array.isArray(errorPayloadResults[0]) &&
-        errorPayloadResults[0].length > 1
-      ) {
-        console.log('No data found');
-        return Promise.reject({ error: 'No data found' });
-      }
+      // if (
+      //   Array.isArray(errorPayloadResults[0]) &&
+      //   errorPayloadResults[0].length > 1
+      // ) {
+      //   console.log('No data found');
+      //   return Promise.reject({ error: 'No data found' });
+      // }
 
       const payloads: JSON[] = [];
       if (
