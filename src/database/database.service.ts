@@ -53,6 +53,11 @@ export class DatabaseService implements OnModuleInit {
         [displayId],
       );
 
+      if (picklistHeaderResults[0]) {
+        res.status(404).json({ error: 'No data found' });
+        return;
+      }
+
       const picklistHeaderId = picklistHeaderResults.map(
         (item) => item[0].picklist_header_id,
       );
@@ -98,6 +103,145 @@ export class DatabaseService implements OnModuleInit {
     } catch (error) {
       console.error('Error in getData:', error);
       res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  // async getErrorPayload(displayId: string, res: Response) {
+  //   console.log('displayId', displayId);
+  //   try {
+  //     const picklistHeaderQuery = `
+  //       SELECT *
+  //       FROM wms.warehouse_request_picklist_header
+  //       WHERE picklist_header_display_id = ?`;
+
+  //     const picklistHeaderResults = await this.connection.query(
+  //       picklistHeaderQuery,
+  //       [displayId],
+  //     );
+
+  //     if (!picklistHeaderResults[0]) {
+  //       res.status(404).json({ error: 'No data found' });
+  //       return;
+  //     }
+
+  //     const picklistHeaderId = picklistHeaderResults.map(
+  //       (item) => item[0].picklist_header_id,
+  //     );
+
+  //     const errorPayloadQuery = ` select *
+  //     from wms.warehouse_request_picklist_allocation_status
+  //     WHERE picklist_header_id = ?
+  //       and is_active = true
+  //       and warehouse_request_picklist_allocation_status.error_msg IS NOT NULL;`;
+
+  //     const errorPayloadResults = await this.connection.query(
+  //       errorPayloadQuery,
+  //       [picklistHeaderId[0]],
+  //     );
+
+  //     if (!errorPayloadResults[0]) {
+  //       res.status(404).json({ error: 'No data found' });
+  //       return;
+  //     }
+
+  //     const payloads: JSON[] = [];
+  //     if (
+  //       Array.isArray(errorPayloadResults[0]) &&
+  //       errorPayloadResults[0].length > 1
+  //     ) {
+  //       for (let i = 0; i < errorPayloadResults[0].length; i++) {
+  //         const result = errorPayloadResults[0][i];
+
+  //         // Check if result is of type RowDataPacket
+  //         if ('payload' in result) {
+  //           const payload = result.payload;
+  //           const parsedPayload = JSON.parse(payload);
+  //           payloads.push(parsedPayload);
+  //         } else {
+  //           // Handle other types (OkPacket, ResultSetHeader, etc.) if needed
+  //           console.log('Unhandled result type:', result);
+  //         }
+  //       }
+
+  //       res.status(200).json(payloads);
+  //     } else {
+  //       const payload = errorPayloadResults.map((item) => item[0].payload);
+  //       const parsedPayload = JSON.parse(payload[0]);
+  //       res.status(200).end(parsedPayload);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error in getData:', error);
+  //     res.status(500).json({ error: 'Internal Server Error' });
+  //   }
+  // }
+  async getErrorPayload(displayId: string): Promise<JSON[]> {
+    console.log('displayId', displayId);
+    try {
+      const picklistHeaderQuery = `
+        SELECT *
+        FROM wms.warehouse_request_picklist_header
+        WHERE picklist_header_display_id = ?`;
+
+      const picklistHeaderResults = await this.connection.query(
+        picklistHeaderQuery,
+        [displayId],
+      );
+
+      if (!picklistHeaderResults[0]) {
+        return Promise.reject({ error: 'No data found' });
+      }
+
+      const picklistHeaderId = picklistHeaderResults.map(
+        (item) => item[0].picklist_header_id,
+      );
+
+      const errorPayloadQuery = ` select *
+      from wms.warehouse_request_picklist_allocation_status
+      WHERE picklist_header_id = ?
+        and is_active = true
+        and warehouse_request_picklist_allocation_status.error_msg IS NOT NULL;`;
+
+      const errorPayloadResults = await this.connection.query(
+        errorPayloadQuery,
+        [picklistHeaderId[0]],
+      );
+
+      if (
+        Array.isArray(errorPayloadResults[0]) &&
+        errorPayloadResults[0].length > 1
+      ) {
+        console.log('No data found');
+        return Promise.reject({ error: 'No data found' });
+      }
+
+      const payloads: JSON[] = [];
+      if (
+        Array.isArray(errorPayloadResults[0]) &&
+        errorPayloadResults[0].length > 1
+      ) {
+        for (let i = 0; i < errorPayloadResults[0].length; i++) {
+          const result = errorPayloadResults[0][i];
+
+          // Check if result is of type RowDataPacket
+          if ('payload' in result) {
+            const payload = result.payload;
+            const parsedPayload = JSON.parse(payload);
+            payloads.push(parsedPayload);
+          } else {
+            // Handle other types (OkPacket, ResultSetHeader, etc.) if needed
+            console.log('Unhandled result type:', result);
+          }
+        }
+
+        return payloads;
+      } else {
+        const payload = errorPayloadResults.map((item) => item[0].payload);
+        const parsedPayload = JSON.parse(payload[0]);
+        return [parsedPayload];
+      }
+    } catch (error) {
+      console.error('Error in getData:', error);
+      return Promise.reject({ error: 'Internal Server Error' });
     }
   }
 }
