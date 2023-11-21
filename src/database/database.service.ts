@@ -5,10 +5,15 @@ import * as path from 'path';
 import * as ExcelJS from 'exceljs';
 import e, { Response } from 'express';
 import { error } from 'console';
+import internal from 'stream';
 
 export interface ErrorPayloadResponse {
   errors: string[];
   payloads: JSON[];
+  headerID: number;
+  suspenededStep: number;
+  picklistStatus: number;
+  allocatedStatus: number;
 }
 
 @Injectable()
@@ -200,9 +205,21 @@ export class DatabaseService implements OnModuleInit {
         return Promise.reject({ error: 'No data found' });
       }
       let picklistHeaderId: any;
+      let suspenededStep: any;
+      let picklistStatus: any;
+      let allocatedStatus: any;
       try {
         picklistHeaderId = picklistHeaderResults.map(
           (item) => item[0].picklist_header_id,
+        );
+        suspenededStep = picklistHeaderResults.map(
+          (item) => item[0].suspended_step,
+        );
+        picklistStatus = picklistHeaderResults.map(
+          (item) => item[0].picklist_status,
+        );
+        allocatedStatus = picklistHeaderResults.map(
+          (item) => item[0].is_alloc_completed,
         );
       } catch (error) {
         console.log('No data found');
@@ -250,7 +267,14 @@ export class DatabaseService implements OnModuleInit {
           }
         }
 
-        return { errors, payloads };
+        return {
+          errors,
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+        };
       }
       if (errorPayloadResults[0] === undefined) {
         //console.log('No data found');
@@ -263,7 +287,14 @@ export class DatabaseService implements OnModuleInit {
         payloads.push(JSON.parse(payload[0].toString()));
         const error = errorPayloadResults.map((item) => item[0].error_msg);
         errors.push(error.toString());
-        return { errors, payloads };
+        return {
+          errors,
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+        };
       }
     } catch (error) {
       console.error('Error in getData:', error);
