@@ -3,7 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import * as mysql from 'mysql2/promise';
 import * as path from 'path';
 import * as ExcelJS from 'exceljs';
-import { Response } from 'express';
+import e, { Response } from 'express';
+import { error } from 'console';
+
+export interface ErrorPayloadResponse {
+  errors: string[];
+  payloads: JSON[];
+}
 
 @Injectable()
 export class DatabaseService implements OnModuleInit {
@@ -174,7 +180,7 @@ export class DatabaseService implements OnModuleInit {
   //     res.status(500).json({ error: 'Internal Server Error' });
   //   }
   // }
-  async getErrorPayload(displayId: string): Promise<JSON[]> {
+  async getErrorPayload(displayId: string): Promise<ErrorPayloadResponse> {
     console.log('displayId', displayId);
     try {
       const picklistHeaderQuery = `
@@ -223,6 +229,7 @@ export class DatabaseService implements OnModuleInit {
       // }
 
       const payloads: JSON[] = [];
+      const errors: string[] = [];
       if (
         Array.isArray(errorPayloadResults[0]) &&
         errorPayloadResults[0].length > 1
@@ -233,6 +240,8 @@ export class DatabaseService implements OnModuleInit {
           // Check if result is of type RowDataPacket
           if ('payload' in result) {
             const payload = result.payload;
+            console.log(result.error_msg);
+            errors.push(result.error_msg);
             const parsedPayload = JSON.parse(payload);
             payloads.push(parsedPayload);
           } else {
@@ -241,11 +250,20 @@ export class DatabaseService implements OnModuleInit {
           }
         }
 
-        return payloads;
+        return { errors, payloads };
+      }
+      if (errorPayloadResults[0] === undefined) {
+        //console.log('No data found');
+        return Promise.reject({ error: 'No data found' });
       } else {
+        const payloads: JSON[] = [];
+        const errors: string[] = [];
         const payload = errorPayloadResults.map((item) => item[0].payload);
-        const parsedPayload = JSON.parse(payload[0]);
-        return [parsedPayload];
+        console.log(payload[0]);
+        payloads.push(JSON.parse(payload[0].toString()));
+        const error = errorPayloadResults.map((item) => item[0].error_msg);
+        errors.push(error.toString());
+        return { errors, payloads };
       }
     } catch (error) {
       console.error('Error in getData:', error);

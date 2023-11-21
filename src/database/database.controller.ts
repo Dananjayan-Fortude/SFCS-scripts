@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { DatabaseService } from './database.service';
+import { DatabaseService, ErrorPayloadResponse } from './database.service';
 
 @Controller('database')
 export class DatabaseController {
@@ -33,10 +33,7 @@ export class DatabaseController {
   async getErrorPayload(@Param('displayId') displayId: string) {
     try {
       const data = await this.dbservice.getErrorPayload(displayId);
-      for (let i = 0; i < data.length; i++) {
-        console.log(data[i]);
-        //return data[i];
-      }
+      console.log('data', data);
       return data;
     } catch (error) {
       console.error('Error in getData:', error);
