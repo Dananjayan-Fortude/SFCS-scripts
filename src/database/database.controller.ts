@@ -37,6 +37,7 @@ export class DatabaseController {
         console.log(data[i]);
         //return data[i];
       }
+      return data;
     } catch (error) {
       console.error('Error in getData:', error);
       return { error };
