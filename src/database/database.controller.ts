@@ -32,6 +32,7 @@ export class DatabaseController {
   @Get('errorpayload/:displayId')
   async getErrorPayload(@Param('displayId') displayId: string) {
     try {
+      console.log('hello');
       const data = await this.dbservice.getErrorPayload(displayId);
       for (let i = 0; i < data.length; i++) {
         console.log(data[i]);
