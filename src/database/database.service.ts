@@ -279,7 +279,7 @@ export class DatabaseService implements OnModuleInit {
           error_codes,
         };
       }
-      if (errorPayloadResults[0] === undefined || errorPayloadResults[0]) {
+      if (errorPayloadResults[0] === undefined) {
         console.log('No data found');
         const error = 'No data found';
         errors.push(error);
