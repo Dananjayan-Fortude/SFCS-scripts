@@ -3,9 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as mysql from 'mysql2/promise';
 import * as path from 'path';
 import * as ExcelJS from 'exceljs';
-import e, { Response } from 'express';
-import { error } from 'console';
-import internal from 'stream';
+import { Response } from 'express';
 
 export interface ErrorPayloadResponse {
   errors: string[];
@@ -14,6 +12,7 @@ export interface ErrorPayloadResponse {
   suspenededStep: number;
   picklistStatus: number;
   allocatedStatus: number;
+  error_codes: string[];
 }
 
 @Injectable()
@@ -247,6 +246,7 @@ export class DatabaseService implements OnModuleInit {
 
       const payloads: JSON[] = [];
       const errors: string[] = [];
+      const error_codes: string[] = [];
       if (
         Array.isArray(errorPayloadResults[0]) &&
         errorPayloadResults[0].length > 1
@@ -257,8 +257,10 @@ export class DatabaseService implements OnModuleInit {
           // Check if result is of type RowDataPacket
           if ('payload' in result) {
             const payload = result.payload;
-            console.log(result.error_msg);
+            console.log(result.error_code);
+            // console.log(result.error_msg);
             errors.push(result.error_msg);
+            error_codes.push(result.error_code);
             const parsedPayload = JSON.parse(payload);
             payloads.push(parsedPayload);
           } else {
@@ -274,18 +276,36 @@ export class DatabaseService implements OnModuleInit {
           suspenededStep: suspenededStep[0],
           picklistStatus: picklistStatus[0],
           allocatedStatus: allocatedStatus[0],
+          error_codes,
         };
       }
-      if (errorPayloadResults[0] === undefined) {
-        //console.log('No data found');
-        return Promise.reject({ error: 'No data found' });
+      if (errorPayloadResults[0] === undefined || errorPayloadResults[0]) {
+        console.log('No data found');
+        const error = 'No data found';
+        errors.push(error);
+        return {
+          errors,
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+          error_codes,
+        };
+        //return Promise.reject({ error: 'No data found' });
       } else {
+        console.log(errorPayloadResults[0]);
         const payloads: JSON[] = [];
         const errors: string[] = [];
+        const error_codes: string[] = [];
         const payload = errorPayloadResults.map((item) => item[0].payload);
         console.log(payload[0]);
         payloads.push(JSON.parse(payload[0].toString()));
         const error = errorPayloadResults.map((item) => item[0].error_msg);
+        const error_code = errorPayloadResults.map(
+          (item) => item[0].error_code,
+        );
+        error_codes.push(error_code.toString());
         errors.push(error.toString());
         return {
           errors,
@@ -294,6 +314,7 @@ export class DatabaseService implements OnModuleInit {
           suspenededStep: suspenededStep[0],
           picklistStatus: picklistStatus[0],
           allocatedStatus: allocatedStatus[0],
+          error_codes,
         };
       }
     } catch (error) {
