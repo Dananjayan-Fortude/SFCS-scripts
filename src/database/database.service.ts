@@ -70,7 +70,7 @@ export class DatabaseService implements OnModuleInit {
         [displayId],
       );
 
-      if (picklistHeaderResults[0]) {
+      if (!picklistHeaderResults[0]) {
         res.status(404).json({ error: 'No data found' });
         return;
       }
@@ -78,6 +78,8 @@ export class DatabaseService implements OnModuleInit {
       const picklistHeaderId = picklistHeaderResults.map(
         (item) => item[0].picklist_header_id,
       );
+
+      console.log(picklistHeaderId[0]);
 
       const transactionSummaryQuery = `
         SELECT *
@@ -286,7 +288,7 @@ export class DatabaseService implements OnModuleInit {
           error_codes,
         };
       }
-      if (errorPayloadResults[0] === undefined) {
+      if ((errorPayloadResults[0] as RowDataPacket[]).length === 0) {
         console.log('No data found');
         const error = 'No data found';
         errors.push(error);
