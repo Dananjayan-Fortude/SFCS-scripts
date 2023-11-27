@@ -17,6 +17,7 @@ export interface ErrorPayloadResponse {
 }
 
 export interface queryResponse {
+  details: string;
   picklistUpdate: string;
   suspenededUpdate: string;
 }
@@ -363,7 +364,8 @@ export class DatabaseService implements OnModuleInit {
         const suspenededUpdate = `UPDATE wms.warehouse_request_header
         SET is_suspended=0
         WHERE request_header_id= '${request_header_id[0]}' ;`;
-        return { picklistUpdate, suspenededUpdate };
+        let details = `- Picklist Header ID: ${picklistHeaderId[0]}\n- Display ID: ${displayId}\n- Request Header ID: ${request_header_id[0]}`;
+        return { details, picklistUpdate, suspenededUpdate };
       }
     } catch (error) {
       console.error('Error in getData:', error);
