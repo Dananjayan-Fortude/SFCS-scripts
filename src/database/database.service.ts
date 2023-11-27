@@ -4,7 +4,6 @@ import * as mysql from 'mysql2/promise';
 import * as path from 'path';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
-import { IsNull } from 'typeorm';
 import { RowDataPacket } from 'mysql2/promise';
 
 export interface ErrorPayloadResponse {
