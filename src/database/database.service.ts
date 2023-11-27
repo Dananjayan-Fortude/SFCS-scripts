@@ -4,6 +4,8 @@ import * as mysql from 'mysql2/promise';
 import * as path from 'path';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import { IsNull } from 'typeorm';
+import { RowDataPacket } from 'mysql2/promise';
 
 export interface ErrorPayloadResponse {
   errors: string[];
@@ -13,6 +15,11 @@ export interface ErrorPayloadResponse {
   picklistStatus: number;
   allocatedStatus: number;
   error_codes: string[];
+}
+
+export interface queryResponse {
+  picklistUpdate: string;
+  suspenededUpdate: string;
 }
 
 @Injectable()
@@ -320,6 +327,46 @@ export class DatabaseService implements OnModuleInit {
     } catch (error) {
       console.error('Error in getData:', error);
       return Promise.reject({ error: 'Internal Server Error' });
+    }
+  }
+  async getQuery(displayId: string): Promise<queryResponse> {
+    try {
+      const picklistHeaderQuery = `SELECT picklist_header_id
+      from wms.warehouse_request_picklist_header
+      WHERE picklist_header_display_id = ?;`;
+      const picklistHeaderResults = await this.connection.query(
+        picklistHeaderQuery,
+        [displayId],
+      );
+
+      if ((picklistHeaderResults[0] as RowDataPacket[]).length === 0) {
+        console.log('No data found');
+        return Promise.reject({ error: 'No data found' });
+      } else {
+        const picklistHeaderId = picklistHeaderResults.map(
+          (item) => item[0].picklist_header_id,
+        );
+        const query = `select request_header_id
+        from wms.warehouse_request_picklist_header
+        WHERE picklist_header_id = ?;`;
+        const results = await this.connection.query(query, [
+          picklistHeaderId[0],
+        ]);
+        const request_header_id = results.map(
+          (item) => item[0].request_header_id,
+        );
+        // return request_header_id[0];
+        const picklistUpdate = `UPDATE wms.warehouse_request_picklist_header
+        SET picklist_status=2
+        WHERE picklist_header_id= '${picklistHeaderId[0]}' ;`;
+        const suspenededUpdate = `UPDATE wms.warehouse_request_header
+        SET is_suspended=0
+        WHERE request_header_id= '${request_header_id[0]}' ;`;
+        return { picklistUpdate, suspenededUpdate };
+      }
+    } catch (error) {
+      console.error('Error in getData:', error);
+      return Promise.reject({ error });
     }
   }
 }

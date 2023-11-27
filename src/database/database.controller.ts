@@ -40,4 +40,15 @@ export class DatabaseController {
       return { error };
     }
   }
+
+  @Get('query/:displayId')
+  async getQuery(@Param('displayId') displayId: string) {
+    try {
+      const data = await this.dbservice.getQuery(displayId);
+      return data;
+    } catch (error) {
+      console.error('Error in getData:', error);
+      return { error };
+    }
+  }
 }
