@@ -61,9 +61,9 @@ export class DatabaseService implements OnModuleInit {
     console.log('displayId', displayId);
     try {
       const picklistHeaderQuery = `
-        SELECT *
-        FROM wms.warehouse_request_picklist_header
-        WHERE picklist_header_display_id = ?`;
+          SELECT *
+          FROM wms.warehouse_request_picklist_header
+          WHERE picklist_header_display_id = ?`;
 
       const picklistHeaderResults = await this.connection.query(
         picklistHeaderQuery,
@@ -82,10 +82,10 @@ export class DatabaseService implements OnModuleInit {
       console.log(picklistHeaderId[0]);
 
       const transactionSummaryQuery = `
-        SELECT *
-        FROM wms.transaction_summary
-        WHERE ref_id = ?
-        and transaction_summary_type = 'M3';`;
+          SELECT *
+          FROM wms.transaction_summary
+          WHERE ref_id = ?
+            and transaction_summary_type = 'M3';`;
 
       const transactionSummaryResults = await this.connection.query(
         transactionSummaryQuery,
@@ -197,9 +197,9 @@ export class DatabaseService implements OnModuleInit {
     console.log('displayId', displayId);
     try {
       const picklistHeaderQuery = `
-        SELECT *
-        FROM wms.warehouse_request_picklist_header
-        WHERE picklist_header_display_id = ?`;
+          SELECT *
+          FROM wms.warehouse_request_picklist_header
+          WHERE picklist_header_display_id = ?`;
 
       const picklistHeaderResults = await this.connection.query(
         picklistHeaderQuery,
@@ -235,10 +235,10 @@ export class DatabaseService implements OnModuleInit {
       }
 
       const errorPayloadQuery = ` select *
-      from wms.warehouse_request_picklist_allocation_status
-      WHERE picklist_header_id = ?
-        and is_active = true
-        and warehouse_request_picklist_allocation_status.error_msg IS NOT NULL;`;
+                                  from wms.warehouse_request_picklist_allocation_status
+                                  WHERE picklist_header_id = ?
+                                    and is_active = true
+                                    and warehouse_request_picklist_allocation_status.error_msg IS NOT NULL;`;
 
       const errorPayloadResults = await this.connection.query(
         errorPayloadQuery,
@@ -331,11 +331,12 @@ export class DatabaseService implements OnModuleInit {
       return Promise.reject({ error: 'Internal Server Error' });
     }
   }
+
   async getQuery(displayId: string): Promise<queryResponse> {
     try {
       const picklistHeaderQuery = `SELECT picklist_header_id
-      from wms.warehouse_request_picklist_header
-      WHERE picklist_header_display_id = ?;`;
+                                   from wms.warehouse_request_picklist_header
+                                   WHERE picklist_header_display_id = ?;`;
       const picklistHeaderResults = await this.connection.query(
         picklistHeaderQuery,
         [displayId],
@@ -349,8 +350,8 @@ export class DatabaseService implements OnModuleInit {
           (item) => item[0].picklist_header_id,
         );
         const query = `select request_header_id
-        from wms.warehouse_request_picklist_header
-        WHERE picklist_header_id = ?;`;
+                       from wms.warehouse_request_picklist_header
+                       WHERE picklist_header_id = ?;`;
         const results = await this.connection.query(query, [
           picklistHeaderId[0],
         ]);
@@ -359,17 +360,20 @@ export class DatabaseService implements OnModuleInit {
         );
         // return request_header_id[0];
         const picklistUpdate = `UPDATE wms.warehouse_request_picklist_header
-        SET picklist_status=2
-        WHERE picklist_header_id= '${picklistHeaderId[0]}' ;`;
+                                SET picklist_status=2
+                                WHERE picklist_header_id = '${picklistHeaderId[0]}';`;
         const suspenededUpdate = `UPDATE wms.warehouse_request_header
-        SET is_suspended=0
-        WHERE request_header_id= '${request_header_id[0]}' ;`;
-        let details = `- Picklist Header ID: ${picklistHeaderId[0]}\n- Display ID: ${displayId}\n- Request Header ID: ${request_header_id[0]}`;
+                                  SET is_suspended=0
+                                  WHERE request_header_id = '${request_header_id[0]}';`;
+        const details = `- Picklist Header ID: ${picklistHeaderId[0]}\n- Display ID: ${displayId}\n- Request Header ID: ${request_header_id[0]}`;
         return { details, picklistUpdate, suspenededUpdate };
       }
     } catch (error) {
       console.error('Error in getData:', error);
       return Promise.reject({ error });
     }
+  }
+  getPayloads(displayId: string) {
+    throw new Error('Method not implemented.');
   }
 }
