@@ -16,6 +16,14 @@ export interface ErrorPayloadResponse {
   error_codes: string[];
 }
 
+export interface PayloadResponse {
+  payloads: JSON[];
+  headerID: number;
+  suspenededStep: number;
+  picklistStatus: number;
+  allocatedStatus: number;
+}
+
 export interface queryResponse {
   details: string;
   picklistUpdate: string;
@@ -125,74 +133,131 @@ export class DatabaseService implements OnModuleInit {
     }
   }
 
-  // async getErrorPayload(displayId: string, res: Response) {
-  //   console.log('displayId', displayId);
-  //   try {
-  //     const picklistHeaderQuery = `
-  //       SELECT *
-  //       FROM wms.warehouse_request_picklist_header
-  //       WHERE picklist_header_display_id = ?`;
+  async getPayloads(displayId: string): Promise<PayloadResponse> {
+    console.log('displayId', displayId);
+    try {
+      const picklistHeaderQuery = `
+          SELECT *
+          FROM wms.warehouse_request_picklist_header
+          WHERE picklist_header_display_id = ?`;
 
-  //     const picklistHeaderResults = await this.connection.query(
-  //       picklistHeaderQuery,
-  //       [displayId],
-  //     );
+      const picklistHeaderResults = await this.connection.query(
+        picklistHeaderQuery,
+        [displayId],
+      );
 
-  //     if (!picklistHeaderResults[0]) {
-  //       res.status(404).json({ error: 'No data found' });
-  //       return;
-  //     }
+      if (
+        Array.isArray(picklistHeaderResults[0]) &&
+        picklistHeaderResults[0].length > 1
+      ) {
+        return Promise.reject({ error: 'No data found' });
+      }
+      let picklistHeaderId: any;
+      let suspenededStep: any;
+      let picklistStatus: any;
+      let allocatedStatus: any;
+      try {
+        picklistHeaderId = picklistHeaderResults.map(
+          (item) => item[0].picklist_header_id,
+        );
+        suspenededStep = picklistHeaderResults.map(
+          (item) => item[0].suspended_step,
+        );
+        picklistStatus = picklistHeaderResults.map(
+          (item) => item[0].picklist_status,
+        );
+        allocatedStatus = picklistHeaderResults.map(
+          (item) => item[0].is_alloc_completed,
+        );
+      } catch (error) {
+        console.log('No data found');
+        return Promise.reject({ error: 'No data found' });
+      }
 
-  //     const picklistHeaderId = picklistHeaderResults.map(
-  //       (item) => item[0].picklist_header_id,
-  //     );
+      const payloadQuery = ` select *
+                             from wms.warehouse_request_picklist_allocation_status
+                             WHERE picklist_header_id = ? and is_active = true and warehouse_request_picklist_allocation_status.error_msg IS NULL;`;
 
-  //     const errorPayloadQuery = ` select *
-  //     from wms.warehouse_request_picklist_allocation_status
-  //     WHERE picklist_header_id = ?
-  //       and is_active = true
-  //       and warehouse_request_picklist_allocation_status.error_msg IS NOT NULL;`;
+      const payloadResults = await this.connection.query(payloadQuery, [
+        picklistHeaderId[0],
+      ]);
 
-  //     const errorPayloadResults = await this.connection.query(
-  //       errorPayloadQuery,
-  //       [picklistHeaderId[0]],
-  //     );
+      // if (
+      //   Array.isArray(errorPayloadResults[0]) &&
+      //   errorPayloadResults[0].length > 1
+      // ) {
+      //   console.log('No data found');
+      //   return Promise.reject({ error: 'No data found' });
+      // }
 
-  //     if (!errorPayloadResults[0]) {
-  //       res.status(404).json({ error: 'No data found' });
-  //       return;
-  //     }
+      const payloads: JSON[] = [];
+      const errors: string[] = [];
+      const error_codes: string[] = [];
+      if (Array.isArray(payloadResults[0]) && payloadResults[0].length > 1) {
+        for (let i = 0; i < payloadResults[0].length; i++) {
+          const result = payloadResults[0][i];
 
-  //     const payloads: JSON[] = [];
-  //     if (
-  //       Array.isArray(errorPayloadResults[0]) &&
-  //       errorPayloadResults[0].length > 1
-  //     ) {
-  //       for (let i = 0; i < errorPayloadResults[0].length; i++) {
-  //         const result = errorPayloadResults[0][i];
+          // Check if result is of type RowDataPacket
+          if ('payload' in result) {
+            const payload = result.payload;
+            console.log(result.error_code);
+            // console.log(result.error_msg);
+            errors.push(result.error_msg);
+            error_codes.push(result.error_code);
+            const parsedPayload = JSON.parse(payload);
+            payloads.push(parsedPayload);
+          } else {
+            // Handle other types (OkPacket, ResultSetHeader, etc.) if needed
+            console.log('Unhandled result type:', result);
+          }
+        }
 
-  //         // Check if result is of type RowDataPacket
-  //         if ('payload' in result) {
-  //           const payload = result.payload;
-  //           const parsedPayload = JSON.parse(payload);
-  //           payloads.push(parsedPayload);
-  //         } else {
-  //           // Handle other types (OkPacket, ResultSetHeader, etc.) if needed
-  //           console.log('Unhandled result type:', result);
-  //         }
-  //       }
+        return {
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+        };
+      }
+      if ((payloadResults[0] as RowDataPacket[]).length === 0) {
+        console.log('No data found');
+        const error = 'No data found';
+        errors.push(error);
+        return {
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+        };
+        //return Promise.reject({ error: 'No data found' });
+      } else {
+        console.log(payloadResults[0]);
+        const payloads: JSON[] = [];
+        const errors: string[] = [];
+        const error_codes: string[] = [];
+        const payload = payloadResults.map((item) => item[0].payload);
+        console.log(payload[0]);
+        payloads.push(JSON.parse(payload[0].toString()));
+        const error = payloadResults.map((item) => item[0].error_msg);
+        const error_code = payloadResults.map((item) => item[0].error_code);
+        error_codes.push(error_code.toString());
+        errors.push(error.toString());
+        return {
+          payloads,
+          headerID: picklistHeaderId[0],
+          suspenededStep: suspenededStep[0],
+          picklistStatus: picklistStatus[0],
+          allocatedStatus: allocatedStatus[0],
+        };
+      }
+    } catch (error) {
+      console.error('Error in getData:', error);
+      return Promise.reject({ error: 'Internal Server Error' });
+    }
+  }
 
-  //       res.status(200).json(payloads);
-  //     } else {
-  //       const payload = errorPayloadResults.map((item) => item[0].payload);
-  //       const parsedPayload = JSON.parse(payload[0]);
-  //       res.status(200).end(parsedPayload);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error in getData:', error);
-  //     res.status(500).json({ error: 'Internal Server Error' });
-  //   }
-  // }
   async getErrorPayload(displayId: string): Promise<ErrorPayloadResponse> {
     console.log('displayId', displayId);
     try {
@@ -372,8 +437,5 @@ export class DatabaseService implements OnModuleInit {
       console.error('Error in getData:', error);
       return Promise.reject({ error });
     }
-  }
-  getPayloads(displayId: string) {
-    throw new Error('Method not implemented.');
   }
 }
