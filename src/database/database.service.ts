@@ -13,6 +13,7 @@ export interface ErrorPayloadResponse {
   suspenededStep: number;
   picklistStatus: number;
   allocatedStatus: number;
+  printedStatus: number;
   error_codes: string[];
 }
 
@@ -281,6 +282,7 @@ export class DatabaseService implements OnModuleInit {
       let suspenededStep: any;
       let picklistStatus: any;
       let allocatedStatus: any;
+      let printedStatus: any;
       try {
         picklistHeaderId = picklistHeaderResults.map(
           (item) => item[0].picklist_header_id,
@@ -294,6 +296,7 @@ export class DatabaseService implements OnModuleInit {
         allocatedStatus = picklistHeaderResults.map(
           (item) => item[0].is_alloc_completed,
         );
+        printedStatus = picklistHeaderResults.map((item) => item[0].printed);
       } catch (error) {
         console.log('No data found');
         return Promise.reject({ error: 'No data found' });
@@ -350,6 +353,7 @@ export class DatabaseService implements OnModuleInit {
           suspenededStep: suspenededStep[0],
           picklistStatus: picklistStatus[0],
           allocatedStatus: allocatedStatus[0],
+          printedStatus: printedStatus[0],
           error_codes,
         };
       }
@@ -364,6 +368,7 @@ export class DatabaseService implements OnModuleInit {
           suspenededStep: suspenededStep[0],
           picklistStatus: picklistStatus[0],
           allocatedStatus: allocatedStatus[0],
+          printedStatus: printedStatus[0],
           error_codes,
         };
         //return Promise.reject({ error: 'No data found' });
@@ -388,6 +393,7 @@ export class DatabaseService implements OnModuleInit {
           suspenededStep: suspenededStep[0],
           picklistStatus: picklistStatus[0],
           allocatedStatus: allocatedStatus[0],
+          printedStatus: printedStatus[0],
           error_codes,
         };
       }
