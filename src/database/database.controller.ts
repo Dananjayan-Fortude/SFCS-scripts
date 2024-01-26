@@ -16,19 +16,6 @@ export class DatabaseController {
     }
   }
 
-  // @Get('errorpayload/:displayId')
-  // async getErrorPayload(
-  //   @Param('displayId') displayId: string,
-  //   @Res() res: Response,
-  // ) {
-  //   try {
-  //     const data = await this.dbservice.getErrorPayload(displayId, res);
-  //     this.pass(data);
-  //   } catch (error) {
-  //     console.error('Error in getData:', error);
-  //     res.status(500).json({ error: 'Internal Server Error' });
-  //   }
-  // }
   @Get('errorpayload/:displayId')
   async getErrorPayload(@Param('displayId') displayId: string) {
     try {
