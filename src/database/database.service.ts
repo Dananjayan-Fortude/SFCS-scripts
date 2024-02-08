@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
 import { RowDataPacket } from 'mysql2/promise';
+import axios from 'axios';
+import * as https from 'https';
 
 export interface ErrorPayloadResponse {
   errors: string[];
