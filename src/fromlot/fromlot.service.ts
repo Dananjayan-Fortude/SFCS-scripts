@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import * as mysql from 'mysql2/promise';
 import * as https from 'https';
 import axios from 'axios';
-import { In } from 'typeorm';
 
 interface From {
   lot: string;
@@ -240,6 +239,7 @@ export class FromlotService {
             }
         }`;
               console.log(sendData);
+              let sfcsKeys: any[];
               let sfcsKey: any;
               const saveAllocationUrl =
                 'https://sfcs-gateway-cloud.live.brandixlk.org/sfcs-proxy-service/connectors/allocation/saveAllocation';
@@ -253,6 +253,14 @@ export class FromlotService {
                 );
                 console.log(response.data.data.success);
                 if (response.data.data.success == false) {
+                  if (sfcsKeys.length != 0) {
+                    const updatePicklist = `UPDATE wms.warehouse_request_picklist_header
+              SET picklist_status=6
+              WHERE picklist_header_id = '${picklist_header_id}';`;
+                    const updateRequest = `UPDATE wms.warehouse_request_header
+              SET is_suspended=1
+              WHERE request_header_id = '${request_header_id}';`;
+                  }
                   console.error('Error making POST request:', response.data);
                   return {
                     error: response.data.data.error,
@@ -261,6 +269,7 @@ export class FromlotService {
                 }
                 console.log(response.data);
                 sfcsKey = response.data.data.sfcsKey;
+                sfcsKeys.push(sfcsKey);
               } catch (error) {
                 console.error('Error making POST request:', error.message);
                 throw error;

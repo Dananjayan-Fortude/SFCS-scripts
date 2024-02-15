@@ -18,7 +18,9 @@ export class DatabaseController {
 
   @Get('errorpayload/:displayId')
   async getErrorPayload(@Param('displayId') displayId: string) {
+    console.log('displayId', displayId);
     try {
+      console.log('displayId', displayId);
       const data = await this.dbservice.getErrorPayload(displayId);
       console.log('data', data);
       return data;
