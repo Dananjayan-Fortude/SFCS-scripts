@@ -32,7 +32,6 @@ export class DatabaseController {
 
   @Get('payloads/:displayId')
   async getPayloads(@Param('displayId') displayId: string) {
-    //console.log('displayId', displayId);
     try {
       const data = await this.dbservice.getPayloads(displayId);
       return data;
