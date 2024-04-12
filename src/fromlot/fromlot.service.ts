@@ -243,37 +243,37 @@ export class FromlotService {
               let sfcsKey: any;
               const saveAllocationUrl =
                 'https://sfcs-gateway-cloud.live.brandixlk.org/sfcs-proxy-service/connectors/allocation/saveAllocation';
-              try {
-                const response = await axios.post(
-                  saveAllocationUrl,
-                  JSON.parse(sendData),
-                  {
-                    httpsAgent: agent,
-                  },
-                );
-                console.log(response.data.data.success);
-                if (response.data.data.success == false) {
-                  if (sfcsKeys.length != 0) {
-                    const updatePicklist = `UPDATE wms.warehouse_request_picklist_header
-              SET picklist_status=6
-              WHERE picklist_header_id = '${picklist_header_id}';`;
-                    const updateRequest = `UPDATE wms.warehouse_request_header
-              SET is_suspended=1
-              WHERE request_header_id = '${request_header_id}';`;
-                  }
-                  console.error('Error making POST request:', response.data);
-                  return {
-                    error: response.data.data.error,
-                    data: null,
-                  };
-                }
-                console.log(response.data);
-                sfcsKey = response.data.data.sfcsKey;
-                sfcsKeys.push(sfcsKey);
-              } catch (error) {
-                console.error('Error making POST request:', error.message);
-                throw error;
-              }
+              // try {
+              //   const response = await axios.post(
+              //     saveAllocationUrl,
+              //     JSON.parse(sendData),
+              //     {
+              //       httpsAgent: agent,
+              //     },
+              //   );
+              //   console.log(response.data.data.success);
+              //   if (response.data.data.success == false) {
+              //     //     if (sfcsKeys.length != 0) {
+              //     //       const updatePicklist = `UPDATE wms.warehouse_request_picklist_header
+              //     // SET picklist_status=6
+              //     // WHERE picklist_header_id = '${picklist_header_id}';`;
+              //     //       const updateRequest = `UPDATE wms.warehouse_request_header
+              //     // SET is_suspended=1
+              //     // WHERE request_header_id = '${request_header_id}';`;
+              //     //     }
+              //     console.error('Error making POST request:', response.data);
+              //     return {
+              //       error: response.data.data.error,
+              //       data: null,
+              //     };
+              //   }
+              //   console.log(response.data);
+              //   sfcsKey = response.data.data.sfcsKey;
+              //   sfcsKeys.push(sfcsKey);
+              // } catch (error) {
+              //   console.error('Error making POST request1:', error.message);
+              //   throw error;
+              // }
               let updateData = JSON.stringify(JSON.parse(sendData).item);
               updateData = JSON.stringify(updateData);
               const updateQuery = `INSERT INTO wms.warehouse_request_picklist_allocation_status (picklist_allocation_status, plant_code, warehouse_code,
@@ -298,14 +298,18 @@ export class FromlotService {
               const updateRequest = `UPDATE wms.warehouse_request_header
               SET is_suspended=0
               WHERE request_header_id = '${request_header_id}';`;
-              this.connection.query(updateQuery);
-              this.connection.query(deacativatequery);
-              this.connection.query(updatePicklist);
-              this.connection.query(updateRequest);
+              // this.connection.query(updateQuery);
+              // this.connection.query(deacativatequery);
+              // this.connection.query(updatePicklist);
+              // this.connection.query(updateRequest);
+              console.log(updateQuery);
+              console.log(deacativatequery);
+              console.log(updatePicklist);
+              console.log(updateRequest);
             }
           }
         } catch (error) {
-          console.error('Error making POST request:', error.message);
+          console.error('Error making POST request2:', error.message);
           return {
             error: error.message,
             data: null,

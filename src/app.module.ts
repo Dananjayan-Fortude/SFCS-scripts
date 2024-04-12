@@ -9,13 +9,7 @@ import { FromlotModule } from './fromlot/fromlot.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    MyConfigModule,
-    CplUpdateModule,
-    FromlotModule,
-    TypeOrmModule.forRoot(),
-  ],
+  imports: [DatabaseModule, MyConfigModule, CplUpdateModule, FromlotModule],
   controllers: [AppController],
   providers: [AppService, DatabaseService],
 })
